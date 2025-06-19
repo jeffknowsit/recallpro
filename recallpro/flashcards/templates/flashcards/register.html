@@ -1,0 +1,49 @@
+{% extends 'flashcards/base.html' %}
+{% block title %}Register{% endblock %}
+{% block content %}
+<div class="form-container">
+    <h1>Register</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn">Sign Up</button>
+    </form>
+    <p>Already have an account? <a href="{% url 'login' %}" class="nav-link">Login</a></p>
+</div>
+<style>
+.form-container {
+    max-width: 400px;
+    margin: 2rem auto;
+    background: rgba(26, 26, 46, 0.9);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 2rem;
+    box-shadow: 0 0 20px rgba(0,255,255,0.05);
+}
+.form-container h1 {
+    color: var(--accent-color);
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+.form-container label {
+    color: var(--accent-color);
+    font-weight: 500;
+}
+.form-container input {
+    width: 100%;
+    padding: 0.7rem;
+    margin-bottom: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: #22223b;
+    color: var(--text-color);
+}
+.form-container .btn {
+    width: 100%;
+}
+.form-container p {
+    text-align: center;
+    margin-top: 1rem;
+}
+</style>
+{% endblock %} 

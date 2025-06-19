@@ -1,0 +1,185 @@
+{% extends 'flashcards/base.html' %}
+
+{% block title %}Quiz Results{% endblock %}
+
+{% block content %}
+<div class="results-container">
+    <div class="results-header">
+        <h1>Quiz Results for {{ deck.title }}</h1>
+        <p class="score-display">Your Score: <span>{{ score }}%</span></p>
+    </div>
+
+    {% if weak_points %}
+    <div class="weak-points-section">
+        <h2>Areas for Improvement</h2>
+        <ul class="weak-points-list">
+            {% for wp in weak_points %}
+                <li class="weak-point-item">
+                    <p class="question-text-weak">Question: {{ wp.question }}</p>
+                    <p class="your-answer">Your Answer: <span>{{ wp.user_answer|default:"No answer" }}</span></p>
+                    <p class="correct-answer">Correct Answer: <span>{{ wp.correct_answer }}</span></p>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% else %}
+    <div class="all-correct-message">
+        <h2>🎉 Congratulations! 🎉</h2>
+        <p>You answered all questions correctly! Excellent work!</p>
+    </div>
+    {% endif %}
+
+    <div class="gemini-advice-section">
+        <h2>Gemini's Study Advice</h2>
+        <div class="advice-content">
+            <p>{{ gemini_advice|linebreaksbr }}</p>
+        </div>
+    </div>
+
+    <div class="action-buttons">
+        <a href="{% url 'deck_detail' username=user.username pk=deck.pk %}" class="btn view-deck-btn">Back to Deck</a>
+        <a href="{% url 'start_quiz' username=user.username pk=deck.pk %}" class="btn retry-quiz-btn">Retry Quiz</a>
+    </div>
+</div>
+
+<style>
+    .results-container {
+        max-width: 900px;
+        margin: 2rem auto;
+        background: rgba(26, 26, 46, 0.9);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 2.5rem;
+        box-shadow: 0 0 30px rgba(0,255,255,0.08);
+        color: var(--text-color);
+    }
+
+    .results-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .results-header h1 {
+        color: var(--accent-color);
+        margin-bottom: 0.5rem;
+        font-size: 2.5rem;
+    }
+
+    .score-display {
+        font-size: 1.8rem;
+        color: var(--text-light);
+        font-weight: bold;
+    }
+
+    .score-display span {
+        color: var(--success-color);
+    }
+
+    .weak-points-section, .gemini-advice-section, .all-correct-message {
+        background: #1a1a2e;
+        border: 1px solid #4a4a6e;
+        border-radius: 10px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+
+    .weak-points-section h2, .gemini-advice-section h2, .all-correct-message h2 {
+        color: var(--warning-color);
+        margin-bottom: 1.5rem;
+        text-align: center;
+        font-size: 1.8rem;
+    }
+
+    .all-correct-message h2 {
+        color: var(--success-color);
+    }
+
+    .weak-points-list {
+        list-style: none;
+        padding: 0;
+    }
+
+    .weak-point-item {
+        background: #2a2a4e;
+        border: 1px solid #5a5a7e;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .weak-point-item p {
+        margin: 0;
+        font-size: 1.1rem;
+    }
+
+    .question-text-weak {
+        font-weight: bold;
+        color: var(--text-color);
+    }
+
+    .your-answer span {
+        color: var(--error-color);
+        font-weight: bold;
+    }
+
+    .correct-answer span {
+        color: var(--success-color);
+        font-weight: bold;
+    }
+
+    .advice-content {
+        background: #2a2a4e;
+        border-radius: 8px;
+        padding: 1.5rem;
+        font-size: 1.1rem;
+        line-height: 1.6;
+        color: var(--text-light);
+    }
+
+    .action-buttons {
+        text-align: center;
+        margin-top: 2rem;
+        display: flex;
+        justify-content: center;
+        gap: 1.5rem;
+    }
+
+    .btn {
+        padding: 0.9rem 2rem;
+        font-size: 1.1rem;
+        border-radius: 8px;
+        text-decoration: none;
+        transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+    }
+
+    .btn.view-deck-btn {
+        background: #5a5a7e;
+        color: #ffffff;
+        border: none;
+        box-shadow: 0 0 10px rgba(90,90,126,0.4);
+    }
+
+    .btn.view-deck-btn:hover {
+        background: #6a6a8e;
+        transform: translateY(-2px);
+        box-shadow: 0 0 15px rgba(90,90,126,0.6);
+    }
+
+    .btn.retry-quiz-btn {
+        background: var(--accent-color);
+        color: var(--background-color);
+        border: none;
+        box-shadow: 0 0 15px rgba(0,255,255,0.4);
+    }
+
+    .btn.retry-quiz-btn:hover {
+        background: var(--accent-color-dark);
+        transform: translateY(-2px);
+        box-shadow: 0 0 20px rgba(0,255,255,0.6);
+    }
+</style>
+{% endblock %} 

@@ -1,0 +1,32 @@
+{% extends 'flashcards/base.html' %}
+{% block title %}Delete Deck{% endblock %}
+{% block content %}
+<div class="form-container">
+    <h1>Delete Deck</h1>
+    <p>Are you sure you want to delete the deck <strong>{{ deck.title }}</strong>?</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn">Yes, Delete</button>
+        <a href="{% url 'deck_detail' username=deck.user.username pk=deck.pk %}" class="btn">Cancel</a>
+    </form>
+</div>
+<style>
+.form-container {
+    max-width: 400px;
+    margin: 2rem auto;
+    background: rgba(26, 26, 46, 0.9);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 2rem;
+    box-shadow: 0 0 20px rgba(0,255,255,0.05);
+    text-align: center;
+}
+.form-container h1 {
+    color: var(--accent-color);
+    margin-bottom: 1.5rem;
+}
+.form-container .btn {
+    margin: 0.5rem;
+}
+</style>
+{% endblock %} 

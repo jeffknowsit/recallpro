@@ -1,0 +1,253 @@
+{% extends 'flashcards/base.html' %}
+
+{% block title %}Welcome to RecallPro{% endblock %}
+
+{% block content %}
+<div class="hero-container">
+    <div class="hero-content">
+        <h1 class="hero-title">
+            <span class="title-line">Master Your</span>
+            <span class="title-line highlight">Memory</span>
+        </h1>
+        <p class="hero-subtitle">The future of learning is here. Create, study, and master your flashcards with our AI-powered platform.</p>
+        
+        <div class="hero-cta">
+            {% if user.is_authenticated %}
+                <a href="{% url 'deck_list' username=user.username %}" class="btn primary-btn">
+                    <span class="btn-text">My Decks</span>
+                    <span class="btn-icon">→</span>
+                </a>
+            {% else %}
+                <a href="{% url 'register' %}" class="btn primary-btn">
+                    <span class="btn-text">Get Started</span>
+                    <span class="btn-icon">→</span>
+                </a>
+                <a href="{% url 'login' %}" class="btn secondary-btn">Login</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="hero-features">
+        <div class="feature-card">
+            <div class="feature-icon">🎯</div>
+            <h3>Smart Learning</h3>
+            <p>AI-powered spaced repetition for optimal memory retention</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">⚡</div>
+            <h3>Lightning Fast</h3>
+            <p>Create and study flashcards in seconds</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">🎨</div>
+            <h3>Beautiful Design</h3>
+            <p>Modern, intuitive interface for the best learning experience</p>
+        </div>
+    </div>
+
+    <div class="floating-cards">
+        <div class="floating-card card1"></div>
+        <div class="floating-card card2"></div>
+        <div class="floating-card card3"></div>
+    </div>
+</div>
+
+<style>
+.hero-container {
+    min-height: calc(100vh - 80px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-content {
+    text-align: center;
+    max-width: 800px;
+    margin-bottom: 4rem;
+    animation: fadeInUp 1s ease-out;
+}
+
+.hero-title {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.2;
+}
+
+.title-line {
+    display: block;
+    color: var(--text-light);
+}
+
+.title-line.highlight {
+    color: var(--accent-cyan);
+    text-shadow: var(--glow-cyan);
+    font-size: 5rem;
+}
+
+.hero-subtitle {
+    font-size: 1.2rem;
+    color: var(--text-light);
+    margin-bottom: 2rem;
+    opacity: 0.9;
+}
+
+.hero-cta {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.primary-btn {
+    background: linear-gradient(45deg, var(--accent-cyan), var(--accent-purple));
+    border: none;
+    color: var(--primary-bg);
+    font-weight: 600;
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.primary-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 30px rgba(0, 255, 247, 0.4);
+}
+
+.secondary-btn {
+    background: transparent;
+    border: 2px solid var(--accent-cyan);
+    color: var(--accent-cyan);
+}
+
+.hero-features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    width: 100%;
+    margin-top: 4rem;
+}
+
+.feature-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    animation: fadeInUp 0.6s ease-out;
+    animation-fill-mode: both;
+}
+
+.feature-card:nth-child(1) { animation-delay: 0.2s; }
+.feature-card:nth-child(2) { animation-delay: 0.4s; }
+.feature-card:nth-child(3) { animation-delay: 0.6s; }
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--glow-purple);
+}
+
+.feature-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.feature-card h3 {
+    color: var(--accent-cyan);
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+}
+
+.feature-card p {
+    color: var(--text-light);
+    opacity: 0.9;
+}
+
+.floating-cards {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.floating-card {
+    position: absolute;
+    width: 200px;
+    height: 300px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    opacity: 0.1;
+    animation: float 6s ease-in-out infinite;
+}
+
+.card1 {
+    top: 20%;
+    left: 10%;
+    animation-delay: 0s;
+}
+
+.card2 {
+    top: 40%;
+    right: 15%;
+    animation-delay: -2s;
+}
+
+.card3 {
+    bottom: 20%;
+    left: 20%;
+    animation-delay: -4s;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-20px) rotate(5deg);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 3rem;
+    }
+    
+    .title-line.highlight {
+        font-size: 3.5rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 1.1rem;
+    }
+    
+    .hero-cta {
+        flex-direction: column;
+    }
+    
+    .hero-features {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %} 

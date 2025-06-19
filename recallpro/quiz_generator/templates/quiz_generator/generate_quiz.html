@@ -1,0 +1,206 @@
+{% extends 'flashcards/base.html' %}
+
+{% block title %}Generate Quiz{% endblock %}
+
+{% block content %}
+<div class="quiz-container">
+    <div class="quiz-header">
+        <h1 class="quiz-title">Generate Your Quiz</h1>
+        <p class="quiz-description">Paste a paragraph of text below, and our AI will generate a set of quiz questions for you.</p>
+    </div>
+    
+    <form method="post" class="quiz-form">
+        {% csrf_token %}
+        <div class="form-group">
+            {{ form.paragraph_text.label_tag }}
+            {{ form.paragraph_text }}
+            {% if form.paragraph_text.errors %}
+                <div class="error-message">{% for error in form.paragraph_text.errors %}{{ error }}{% endfor %}</div>
+            {% endif %}
+        </div>
+        {% if form.non_field_errors %}
+            <div class="error-message">{% for error in form.non_field_errors %}{{ error }}{% endfor %}</div>
+        {% endif %}
+        <button type="submit" class="btn generate-btn" id="generate-button">
+            <span class="btn-icon">✨</span> Generate Quiz
+        </button>
+    </form>
+
+    <div class="loading-overlay" id="loading-spinner">
+        <div class="spinner"></div>
+        <p class="loading-text">Generating quiz... Please wait, this might take a moment.</p>
+    </div>
+</div>
+
+<style>
+    .quiz-container {
+        max-width: 900px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background: rgba(26, 26, 46, 0.9);
+        border-radius: 1.5rem;
+        box-shadow: var(--glow-purple);
+        animation: fadeIn 0.8s ease-out;
+    }
+
+    .quiz-header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+    }
+
+    .quiz-title {
+        color: var(--accent-cyan);
+        font-size: 2.8rem;
+        margin-bottom: 1rem;
+        text-shadow: var(--glow-cyan);
+    }
+
+    .quiz-description {
+        color: var(--text-light);
+        font-size: 1.1rem;
+        line-height: 1.6;
+    }
+
+    .quiz-form .form-group {
+        margin-bottom: 2rem;
+    }
+
+    .quiz-form label {
+        display: block;
+        color: var(--text-light);
+        font-size: 1rem;
+        margin-bottom: 0.8rem;
+        font-weight: bold;
+    }
+
+    .quiz-form textarea {
+        width: 100%;
+        padding: 1rem;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid var(--border-color);
+        border-radius: 0.8rem;
+        color: var(--text-light);
+        font-family: 'Rubik', sans-serif;
+        font-size: 1rem;
+        resize: vertical;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .quiz-form textarea::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .quiz-form textarea:focus {
+        border-color: var(--accent-cyan);
+        box-shadow: var(--glow-cyan-light);
+        outline: none;
+    }
+
+    .generate-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.8rem;
+        width: 100%;
+        padding: 1.2rem 2rem;
+        font-size: 1.3rem;
+        background: var(--accent-cyan);
+        border: none;
+        border-radius: 0.8rem;
+        color: white;
+        cursor: pointer;
+        transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+        box-shadow: var(--glow-cyan);
+    }
+
+    .generate-btn:hover {
+        background: var(--accent-purple);
+        transform: translateY(-3px);
+        box-shadow: var(--glow-purple);
+    }
+
+    .generate-btn .btn-icon {
+        font-size: 1.5rem;
+    }
+
+    .error-message {
+        color: #ff4757;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+        background: rgba(255, 71, 87, 0.1);
+        padding: 0.8rem;
+        border-radius: 0.5rem;
+        border: 1px solid #ff4757;
+    }
+
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(10, 10, 20, 0.95);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+
+    .loading-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .spinner {
+        border: 8px solid rgba(255, 255, 255, 0.1);
+        border-top: 8px solid var(--accent-cyan);
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        animation: spin 1.5s linear infinite;
+        margin-bottom: 1.5rem;
+    }
+
+    .loading-text {
+        color: var(--text-light);
+        font-size: 1.2rem;
+        text-align: center;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 768px) {
+        .quiz-container {
+            margin: 1rem;
+            padding: 1.5rem;
+        }
+
+        .quiz-title {
+            font-size: 2rem;
+        }
+
+        .generate-btn {
+            font-size: 1.1rem;
+            padding: 1rem 1.5rem;
+        }
+    }
+</style>
+
+<script>
+    document.getElementById('generate-button').addEventListener('click', function() {
+        document.getElementById('loading-spinner').classList.add('active');
+    });
+</script>
+{% endblock %} 

@@ -1,0 +1,657 @@
+{% extends 'flashcards/base.html' %}
+
+{% block title %}{{ deck.title }}{% endblock %}
+
+{% block content %}
+<div class="deck-detail-container">
+    <div class="deck-header">
+        <div class="deck-title-section">
+            <h1 class="deck-title">{{ deck.title }}</h1>
+            <p class="deck-description">{{ deck.description }}</p>
+        </div>
+        <div class="deck-actions">
+            <a href="{% url 'start_quiz' username=deck.user.username pk=deck.pk %}" class="btn study-btn">
+                <i class="btn-icon">📖</i> Start Study Session
+            </a>
+            {% if user == deck.user %}
+                <a href="{% url 'deck_update' username=deck.user.username pk=deck.pk %}" class="btn edit-btn">
+                    <i class="btn-icon">✏️</i> Edit Deck
+                </a>
+                <a href="{% url 'deck_delete' username=deck.user.username pk=deck.pk %}" class="btn delete-btn">
+                    <i class="btn-icon">🗑️</i> Delete Deck
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="deck-stats-grid">
+        <div class="stat-card overview">
+            <h3>Overview</h3>
+            <div class="stat-grid">
+                <div class="stat-item">
+                    <span class="stat-label">Total Cards</span>
+                    <span class="stat-value">{{ deck.cards.count }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Study Sessions</span>
+                    <span class="stat-value">{{ deck.study_count }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Total Study Time</span>
+                    <span class="stat-value">{{ deck.total_study_time|default:"0" }} min</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Mastery Level</span>
+                    <span class="stat-value">{{ deck.mastery_level|default:"Beginner" }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card progress">
+            <h3>Learning Progress</h3>
+            <div class="progress-chart">
+                <div class="progress-bar-multi">
+                    <div class="progress-segment new" style="width: {{ deck.new_cards_percentage|default:0 }}%"></div>
+                    <div class="progress-segment learning" style="width: {{ deck.learning_cards_percentage|default:0 }}%"></div>
+                    <div class="progress-segment mastered" style="width: {{ deck.mastered_cards_percentage|default:0 }}%"></div>
+                </div>
+                <div class="progress-labels">
+                    <span>0%</span>
+                    <span>50%</span>
+                    <span>100%</span>
+                </div>
+            </div>
+            <div class="card-distribution-flex">
+                <div class="distribution-item-flex">
+                    <span class="distribution-label" style="color: #00fff7; font-weight: bold;">New</span><br>
+                    <span class="distribution-value">{{ deck.new_cards_count|default:0 }}</span><br>
+                    <span class="distribution-percent" style="color: #00fff7;">{{ deck.new_cards_percentage|floatformat:1 }}%</span>
+                </div>
+                <div class="distribution-item-flex">
+                    <span class="distribution-label" style="color: #00cfff; font-weight: bold;">Learning</span><br>
+                    <span class="distribution-value">{{ deck.learning_cards_count|default:0 }}</span><br>
+                    <span class="distribution-percent" style="color: #00cfff;">{{ deck.learning_cards_percentage|floatformat:1 }}%</span>
+                </div>
+                <div class="distribution-item-flex">
+                    <span class="distribution-label" style="color: #a259ff; font-weight: bold;">Mastered</span><br>
+                    <span class="distribution-value">{{ deck.mastered_cards_count|default:0 }}</span><br>
+                    <span class="distribution-percent" style="color: #a259ff;">{{ deck.mastered_cards_percentage|floatformat:1 }}%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card performance">
+            <h3>Performance Metrics</h3>
+            <div class="metrics-grid">
+                <div class="metric-item">
+                    <span class="metric-label">Average Score</span>
+                    <span class="metric-value">{{ deck.average_score|default:"0" }}%</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Average Time/Card</span>
+                    <span class="metric-value">{{ deck.avg_time_per_card|default:"0" }}s</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Success Rate</span>
+                    <span class="metric-value">{{ deck.success_rate|default:"0" }}%</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Retention Rate</span>
+                    <span class="metric-value">{{ deck.retention_rate|default:"0" }}%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card history">
+            <h3>Study History</h3>
+            <div class="history-timeline">
+                {% for session in deck.study_sessions.all|slice:":5" %}
+                    <div class="timeline-item">
+                        <div class="timeline-icon">📚</div>
+                        <div class="timeline-content">
+                            <div class="timeline-header">
+                                <span class="timeline-date">{{ session.created_at|date:"M d, Y" }}</span>
+                                <span class="timeline-duration">{{ session.duration }} min</span>
+                            </div>
+                            <div class="timeline-stats">
+                                <span class="timeline-stat">Score: {{ session.score }}%</span>
+                                <span class="timeline-stat">Cards: {{ session.cards_studied }}</span>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="no-history">
+                        <p>No study sessions yet. Start studying to track your progress!</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="cards-section">
+        <div class="section-header">
+            <h2>Cards</h2>
+            {% if user == deck.user %}
+                <a href="{% url 'card_create' username=deck.user.username deck_pk=deck.pk %}" class="btn add-card-btn">
+                    <i class="btn-icon">+</i> Add Card
+                </a>
+            {% endif %}
+        </div>
+        <div class="cards-grid">
+            {% for card in cards %}
+                <div class="flip-card" onclick="this.classList.toggle('is-flipped');">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front">
+                            <h3>Question:</h3>
+                            <p>{{ card.question }}</p>
+                        </div>
+                        <div class="flip-card-back">
+                            <div class="back-content">
+                                <h3>Answer:</h3>
+                                <p>{{ card.answer }}</p>
+                                <div class="card-stats">
+                                    <div class="card-stat">
+                                        <span class="stat-label">Type</span>
+                                        <span class="stat-value">{{ card.get_question_type_display }}</span>
+                                    </div>
+                                    <div class="card-stat">
+                                        <span class="stat-label">Status</span>
+                                        <span class="stat-value">{{ card.status|default:"New" }}</span>
+                                    </div>
+                                    <div class="card-stat">
+                                        <span class="stat-label">Last Reviewed</span>
+                                        <span class="stat-value">
+                                            {% if card.last_reviewed %}
+                                                {{ card.last_reviewed|timesince }} ago
+                                            {% else %}
+                                                Never
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                </div>
+                                {% if user == deck.user %}
+                                    <div class="card-actions">
+                                        <a href="{% url 'card_update' username=deck.user.username deck_pk=deck.pk pk=card.pk %}" class="btn edit-btn">Edit</a>
+                                        <a href="{% url 'card_delete' username=deck.user.username deck_pk=deck.pk pk=card.pk %}" class="btn delete-btn">Delete</a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="no-cards">
+                    <p>No cards in this deck yet. Add some cards to start learning!</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .deck-detail-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .deck-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 2rem;
+        background: rgba(26, 26, 46, 0.9);
+        padding: 2rem;
+        border-radius: 1rem;
+        box-shadow: var(--glow-purple);
+    }
+
+    .deck-title-section {
+        flex: 1;
+    }
+
+    .deck-title {
+        color: var(--accent-cyan);
+        font-size: 2.5rem;
+        margin: 0 0 1rem 0;
+        text-shadow: var(--glow-cyan);
+    }
+
+    .deck-description {
+        color: var(--text-light);
+        font-size: 1.1rem;
+        margin: 0;
+    }
+
+    .deck-actions {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.8rem 1.5rem;
+        border-radius: 0.5rem;
+        color: white;
+        text-decoration: none;
+        transition: transform 0.2s ease;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .deck-actions .study-btn {
+        background: #005377;
+        color: #fff;
+        font-size: 1.1rem;
+        font-weight: bold;
+        padding: 1rem 2.2rem;
+        border-radius: 0.6rem;
+        border: none;
+        box-shadow: 0 2px 12px 0 #00334d44;
+        letter-spacing: 0.2px;
+        text-shadow: none;
+        outline: none;
+        margin-right: 1.2rem;
+        transition: background 0.2s, color 0.2s, transform 0.2s, box-shadow 0.2s;
+    }
+    .deck-actions .study-btn:hover, .deck-actions .study-btn:focus {
+        background: #0077b6;
+        color: #fff;
+        box-shadow: 0 4px 18px 0 #00334d66;
+        transform: scale(1.04);
+    }
+
+    .edit-btn {
+        background: var(--accent-purple);
+        box-shadow: var(--glow-purple);
+    }
+
+    .delete-btn {
+        background: #ff4757;
+        box-shadow: 0 0 10px rgba(255, 71, 87, 0.5);
+    }
+
+    .deck-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+
+    .stat-card {
+        background: rgba(26, 26, 46, 0.9);
+        padding: 1.5rem;
+        border-radius: 1rem;
+        box-shadow: var(--glow-purple);
+    }
+
+    .stat-card h3 {
+        color: var(--accent-cyan);
+        margin: 0 0 1.5rem 0;
+        font-size: 1.3rem;
+    }
+
+    .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .stat-item {
+        background: rgba(0, 0, 0, 0.2);
+        padding: 1rem;
+        border-radius: 0.5rem;
+        text-align: center;
+    }
+
+    .stat-label {
+        display: block;
+        color: var(--text-light);
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+        text-align: right;
+    }
+
+    .stat-value {
+        color: var(--accent-cyan);
+        font-size: 1.2rem;
+        font-weight: bold;
+        text-align: right;
+    }
+
+    .progress-chart {
+        margin-bottom: 2rem;
+    }
+
+    .progress-bar-multi {
+        background: linear-gradient(90deg, #00fff7 0%, #a259ff 100%);
+        height: 12px;
+        border-radius: 6px;
+        overflow: hidden;
+        display: flex;
+    }
+
+    .progress-segment {
+        height: 100%;
+        float: left;
+    }
+
+    .progress-segment.new {
+        background: #00fff7;
+    }
+
+    .progress-segment.learning {
+        background: #00cfff;
+    }
+
+    .progress-segment.mastered {
+        background: #a259ff;
+    }
+
+    .progress-labels {
+        display: flex;
+        justify-content: space-between;
+        color: var(--text-light);
+        font-size: 0.8rem;
+    }
+
+    .card-distribution-flex {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 1.2rem;
+    }
+
+    .distribution-item-flex {
+        text-align: center;
+        flex: 1;
+    }
+
+    .distribution-label { font-weight: bold; }
+    .distribution-value { font-size: 1.3rem; }
+    .distribution-percent { font-size: 0.95rem; }
+
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .metric-item {
+        background: rgba(0, 0, 0, 0.2);
+        padding: 1rem;
+        border-radius: 0.5rem;
+        text-align: center;
+    }
+
+    .metric-label {
+        display: block;
+        color: var(--text-light);
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .metric-value {
+        color: var(--accent-cyan);
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+
+    .history-timeline {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .timeline-item {
+        display: flex;
+        gap: 1rem;
+        background: rgba(0, 0, 0, 0.2);
+        padding: 1rem;
+        border-radius: 0.5rem;
+    }
+
+    .timeline-icon {
+        font-size: 1.5rem;
+    }
+
+    .timeline-content {
+        flex: 1;
+    }
+
+    .timeline-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+    }
+
+    .timeline-date {
+        color: var(--accent-cyan);
+        font-weight: bold;
+    }
+
+    .timeline-duration {
+        color: var(--text-light);
+    }
+
+    .timeline-stats {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .timeline-stat {
+        color: var(--text-light);
+        font-size: 0.9rem;
+    }
+
+    .no-history {
+        text-align: center;
+        color: var(--text-light);
+        padding: 2rem;
+    }
+
+    .cards-section {
+        background: rgba(26, 26, 46, 0.9);
+        padding: 2rem;
+        border-radius: 1rem;
+        box-shadow: var(--glow-purple);
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .section-header h2 {
+        color: var(--accent-cyan);
+        margin: 0;
+        font-size: 1.8rem;
+    }
+
+    .add-card-btn {
+        background: #005377;
+        color: #fff;
+        font-size: 1.1rem;
+        font-weight: bold;
+        padding: 1rem 2.2rem;
+        border-radius: 0.6rem;
+        border: none;
+        box-shadow: 0 2px 12px 0 #00334d44;
+        letter-spacing: 0.2px;
+        text-shadow: none;
+        outline: none;
+        margin-left: 1.2rem;
+        transition: background 0.2s, color 0.2s, transform 0.2s, box-shadow 0.2s;
+        display: inline-block;
+    }
+    .add-card-btn:hover, .add-card-btn:focus {
+        background: #0077b6;
+        color: #fff;
+        box-shadow: 0 4px 18px 0 #00334d66;
+        transform: scale(1.04);
+    }
+
+    .cards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 2rem;
+    }
+
+    .flip-card {
+        background-color: transparent;
+        width: 300px;
+        height: 200px;
+        perspective: 1000px; /* 3D effect */
+        cursor: pointer;
+    }
+
+    .flip-card-inner {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        text-align: center;
+        transition: transform 0.8s;
+        transform-style: preserve-3d;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+
+    .flip-card.is-flipped .flip-card-inner {
+        transform: rotateY(180deg);
+    }
+
+    .flip-card-front, .flip-card-back {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        -webkit-backface-visibility: hidden; /* Safari */
+        backface-visibility: hidden;
+        border-radius: 10px;
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        color: var(--text-color);
+        box-sizing: border-box; /* Include padding in width/height calculation */
+        overflow: hidden; /* Ensure content stays within bounds */
+    }
+
+    .flip-card-front {
+        background-color: #1a1a2e; /* Dark background */
+        border: 1px solid #4a4a6e;
+        box-shadow: 0 0 20px rgba(0,255,255,0.08);
+    }
+
+    .flip-card-front p {
+        word-break: break-word;
+        overflow-wrap: break-word;
+        white-space: normal;
+        text-align: center;
+        padding: 0 1rem;
+        transform: none; /* Ensure no inherited transforms here */
+    }
+
+    .flip-card-back {
+        background-color: #2a2a4e; /* Slightly lighter dark background */
+        border: 1px solid #5a5a7e;
+        transform: rotateY(180deg);
+        box-shadow: 0 0 20px rgba(138,43,226,0.08);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between; /* Distribute content */
+        padding: 1.5rem; /* Ensure consistent padding with front */
+    }
+
+    .flip-card-back h3,
+    .flip-card-back p {
+        color: var(--accent-cyan);
+        margin-bottom: 0.5rem;
+        word-break: break-word; /* Added for word breaking */
+        overflow-wrap: break-word; /* Ensure long words break */
+        white-space: normal; /* Ensure text wraps normally */
+        text-align: center; /* Ensure text is centered */
+        padding: 0 1rem; /* Added padding to text */
+        transform: none; /* Aggressively reset any inherited transforms that would re-mirror */
+    }
+
+    .flip-card-back .back-content {
+        /* Removed the transform: rotateY(180deg); that was causing the mirroring */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        height: 100%; /* Ensure content fills space */
+        justify-content: center;
+        width: 100%; /* Ensure content takes full width */
+        flex-grow: 1;
+        flex-shrink: 1;
+        min-height: 0; /* Allow content to shrink */
+        transform: none; /* Ensure no transform here */
+    }
+
+    .flip-card-back .card-stats {
+        margin-top: 1rem;
+        display: flex;
+        justify-content: center; /* Center stats */
+        gap: 1rem;
+        width: 100%;
+    }
+    .flip-card-back .card-stat {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            /* Ensure there is NO 'text-align: right;' here */
+        }
+
+    .flip-card-back .card-actions {
+        margin-top: 1rem;
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+    }
+
+    .flip-card-front h3,
+    .flip-card-front p {
+        color: var(--accent-cyan);
+        margin: 0;
+    }
+
+    .no-cards {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 3rem;
+        color: var(--text-light);
+    }
+
+    @media (max-width: 768px) {
+        .deck-header {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .deck-actions {
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            flex: 1;
+            justify-content: center;
+        }
+
+        .deck-stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .cards-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %} 

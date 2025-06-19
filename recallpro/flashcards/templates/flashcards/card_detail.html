@@ -1,0 +1,197 @@
+{% extends 'flashcards/base.html' %}
+
+{% block title %}Card Details{% endblock %}
+
+{% block content %}
+<div class="card-detail-container">
+    <div class="card-header">
+        <h1>Card Details</h1>
+        <div class="card-actions">
+            <a href="{% url 'card_update' username=card.deck.user.username deck_pk=card.deck.pk pk=card.pk %}" class="btn edit-btn">
+                <i class="btn-icon">✏️</i> Edit Card
+            </a>
+            <a href="{% url 'card_delete' username=card.deck.user.username deck_pk=card.deck.pk pk=card.pk %}" class="btn delete-btn">
+                <i class="btn-icon">🗑️</i> Delete Card
+            </a>
+        </div>
+    </div>
+
+    <div class="card-content-display">
+        <div class="detail-section">
+            <h3>Question:</h3>
+            <p>{{ card.question }}</p>
+        </div>
+
+        <div class="detail-section">
+            <h3>Answer:</h3>
+            <p>{{ card.answer }}</p>
+        </div>
+
+        <div class="detail-section">
+            <h3>Question Type:</h3>
+            <p>{{ card.get_question_type_display }}</p>
+        </div>
+
+        {% if card.question_type == 'mcq' and card.options %}
+            <div class="detail-section">
+                <h3>Options:</h3>
+                <ul class="options-list-detail">
+                    {% for option in card.options %}
+                        <li>{{ option }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <div class="detail-section">
+            <h3>Status:</h3>
+            <p>{{ card.status|default:"New" }}</p>
+        </div>
+
+        <div class="detail-section">
+            <h3>Last Reviewed:</h3>
+            <p>{% if card.last_reviewed %}{{ card.last_reviewed|timesince }} ago{% else %}Never{% endif %}</p>
+        </div>
+
+        <div class="detail-section">
+            <h3>Review Count:</h3>
+            <p>{{ card.review_count }}</p>
+        </div>
+
+        <div class="detail-section">
+            <h3>Correct Count:</h3>
+            <p>{{ card.correct_count }}</p>
+        </div>
+    </div>
+
+    <div class="back-to-deck-btn">
+        <a href="{% url 'deck_detail' username=card.deck.user.username pk=card.deck.pk %}" class="btn view-deck-btn">
+            Back to Deck
+        </a>
+    </div>
+
+</div>
+
+<style>
+    .card-detail-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        background: rgba(26, 26, 46, 0.9);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 2.5rem;
+        box-shadow: 0 0 30px rgba(0,255,255,0.08);
+        color: var(--text-color);
+    }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(80, 80, 120, 0.3);
+    }
+
+    .card-header h1 {
+        color: var(--accent-cyan);
+        margin: 0;
+        font-size: 2rem;
+    }
+
+    .card-actions .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.7rem 1.2rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 0.95rem;
+        transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+        color: white;
+        border: none;
+    }
+
+    .card-actions .edit-btn {
+        background: var(--primary-purple-dark);
+        box-shadow: 0 0 10px rgba(90,90,126,0.3);
+    }
+
+    .card-actions .edit-btn:hover {
+        background: #5a5a7e;
+        transform: translateY(-2px);
+        box-shadow: 0 0 15px rgba(90,90,126,0.5);
+    }
+
+    .card-actions .delete-btn {
+        background: var(--error-color);
+        box-shadow: 0 0 10px rgba(220,53,69,0.3);
+        margin-left: 1rem;
+    }
+
+    .card-actions .delete-btn:hover {
+        background: #c82333;
+        transform: translateY(-2px);
+        box-shadow: 0 0 15px rgba(220,53,69,0.5);
+    }
+
+    .detail-section {
+        background: #1a1a2e;
+        border: 1px solid #4a4a6e;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+
+    .detail-section h3 {
+        color: var(--accent-color);
+        margin-top: 0;
+        margin-bottom: 0.8rem;
+        font-size: 1.3rem;
+    }
+
+    .detail-section p {
+        color: var(--text-light);
+        font-size: 1.1rem;
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    .options-list-detail {
+        list-style: decimal;
+        padding-left: 1.5rem;
+        margin-top: 0.5rem;
+        color: var(--text-light);
+        font-size: 1.1rem;
+    }
+
+    .options-list-detail li {
+        margin-bottom: 0.5rem;
+    }
+
+    .back-to-deck-btn {
+        text-align: center;
+        margin-top: 2rem;
+    }
+
+    .back-to-deck-btn .btn {
+        background: var(--accent-color);
+        color: var(--background-color);
+        padding: 0.9rem 2.5rem;
+        font-size: 1.2rem;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+        box-shadow: 0 0 15px rgba(0,255,255,0.4);
+    }
+
+    .back-to-deck-btn .btn:hover {
+        background: var(--accent-color-dark);
+        transform: translateY(-2px);
+        box-shadow: 0 0 20px rgba(0,255,255,0.6);
+    }
+
+</style>
+{% endblock %} 

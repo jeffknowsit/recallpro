@@ -1,0 +1,65 @@
+{% extends 'flashcards/base.html' %}
+{% block title %}Deck Form{% endblock %}
+{% block content %}
+<div class="form-container">
+    <h1>{% if form.instance.pk %}Edit Deck{% else %}Create Deck{% endif %}</h1>
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="id_title">Title:</label>
+            {{ form.title }}
+        </div>
+        <div class="form-group">
+            <label for="id_description">Description:</label>
+            {{ form.description }}
+        </div>
+        <div class="form-group">
+            <label for="id_paragraph_text">{{ form.paragraph_text.label }}:</label>
+            {{ form.paragraph_text }}
+            {% if form.paragraph_text.help_text %}
+                <small class="form-text-muted">{{ form.paragraph_text.help_text }}</small>
+            {% endif %}
+        </div>
+        <button type="submit" class="btn">{% if form.instance.pk %}Update{% else %}Create{% endif %}</button>
+    </form>
+</div>
+<style>
+.form-container {
+    max-width: 500px;
+    margin: 2rem auto;
+    background: rgba(26, 26, 46, 0.9);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 2rem;
+    box-shadow: 0 0 20px rgba(0,255,255,0.05);
+}
+.form-container h1 {
+    color: var(--accent-color);
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+.form-container label {
+    color: var(--accent-color);
+    font-weight: 500;
+}
+.form-container input, .form-container textarea {
+    width: 100%;
+    padding: 0.7rem;
+    margin-bottom: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: #22223b;
+    color: var(--text-color);
+}
+.form-container .form-text-muted {
+    color: #a0a0a0;
+    font-size: 0.85rem;
+    margin-top: -0.5rem;
+    margin-bottom: 1rem;
+    display: block;
+}
+.form-container .btn {
+    width: 100%;
+}
+</style>
+{% endblock %} 

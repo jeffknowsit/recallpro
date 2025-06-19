@@ -1,0 +1,263 @@
+{% extends 'flashcards/base.html' %}
+
+{% block title %}Quiz Results{% endblock %}
+
+{% block content %}
+<div class="quiz-results-container">
+    <div class="results-header">
+        <h1 class="results-title">Quiz Results</h1>
+        <p class="score-display">You scored: <span class="score-value">{{ score }}/{{ total_questions }}</span></p>
+    </div>
+
+    {% if weak_points %}
+        <div class="weak-points-summary">
+            <h2><span class="icon">⚠️</span> Your Weak Points Summary</h2>
+            <p class="summary-text">It seems you struggled with the following concepts from the paragraph. Please review these areas:</p>
+            <ul class="weak-points-list">
+                {% for point in weak_points %}
+                    <li class="weak-point-item">
+                        <p class="question-text">Question: {{ point.question }}</p>
+                        <p class="user-answer">Your Answer: <span class="incorrect-answer">{{ point.user_answer|default:"No answer" }}</span></p>
+                        <p class="correct-answer">Correct Answer: <span class="highlight">{{ point.correct_answer }}</span></p>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% else %}
+        <div class="all-correct-message">
+            <span class="icon">🎉</span>
+            <h2>Congratulations!</h2>
+            <p>You answered all questions correctly!</p>
+        </div>
+    {% endif %}
+
+    <div class="original-paragraph-section">
+        <h2>Original Paragraph</h2>
+        <div class="paragraph-content">
+            <p>{{ paragraph }}</p>
+        </div>
+    </div>
+
+    <div class="results-actions">
+        <a href="{% url 'generate_quiz' %}" class="btn generate-new-quiz-btn">
+            <span class="btn-icon">🔄</span> Generate New Quiz
+        </a>
+        <a href="{% url 'home' %}" class="btn back-home-btn">
+            <span class="btn-icon">🏠</span> Back to Home
+        </a>
+    </div>
+</div>
+
+<style>
+    .quiz-results-container {
+        max-width: 900px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background: rgba(26, 26, 46, 0.9);
+        border-radius: 1.5rem;
+        box-shadow: var(--glow-purple);
+        animation: fadeIn 0.8s ease-out;
+    }
+
+    .results-header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+    }
+
+    .results-title {
+        color: var(--accent-cyan);
+        font-size: 2.8rem;
+        margin-bottom: 1rem;
+        text-shadow: var(--glow-cyan);
+    }
+
+    .score-display {
+        color: var(--text-light);
+        font-size: 1.5rem;
+    }
+
+    .score-value {
+        color: var(--accent-purple);
+        font-weight: bold;
+        text-shadow: var(--glow-purple);
+    }
+
+    .weak-points-summary {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 1.5rem;
+        border-radius: 1rem;
+        border: 1px solid #ff4757;
+        box-shadow: 0 0 15px rgba(255, 71, 87, 0.1), 0 0 5px rgba(255, 71, 87, 0.2);
+        margin-bottom: 2rem;
+    }
+
+    .weak-points-summary h2 {
+        color: #ff4757;
+        font-size: 1.8rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+    }
+
+    .weak-points-summary .icon {
+        font-size: 2rem;
+    }
+
+    .summary-text {
+        color: var(--text-light);
+        margin-bottom: 1.5rem;
+        line-height: 1.6;
+    }
+
+    .weak-points-list {
+        list-style: none;
+        padding: 0;
+    }
+
+    .weak-point-item {
+        background: rgba(0, 0, 0, 0.2);
+        padding: 1rem;
+        border-radius: 0.8rem;
+        margin-bottom: 1rem;
+        border-left: 5px solid #ff4757;
+    }
+
+    .weak-point-item p {
+        margin: 0.5rem 0;
+        color: var(--text-light);
+    }
+
+    .weak-point-item .question-text {
+        font-weight: bold;
+        color: var(--accent-cyan);
+    }
+
+    .incorrect-answer {
+        color: #ff4757;
+        font-weight: bold;
+    }
+
+    .correct-answer .highlight {
+        color: var(--accent-cyan);
+        font-weight: bold;
+    }
+
+    .all-correct-message {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 2rem;
+        border-radius: 1rem;
+        border: 1px solid var(--accent-cyan);
+        box-shadow: 0 0 15px rgba(0, 255, 255, 0.1), 0 0 5px rgba(0, 255, 255, 0.2);
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .all-correct-message .icon {
+        font-size: 4rem;
+        color: var(--accent-cyan);
+        margin-bottom: 1rem;
+    }
+
+    .all-correct-message h2 {
+        color: var(--accent-cyan);
+        font-size: 2.2rem;
+        margin-bottom: 0.8rem;
+    }
+
+    .all-correct-message p {
+        color: var(--text-light);
+        font-size: 1.1rem;
+    }
+
+    .original-paragraph-section {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 1.5rem;
+        border-radius: 1rem;
+        border: 1px solid var(--border-color);
+        margin-bottom: 2rem;
+    }
+
+    .original-paragraph-section h2 {
+        color: var(--accent-purple);
+        font-size: 1.8rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .paragraph-content p {
+        color: var(--text-light);
+        line-height: 1.8;
+        white-space: pre-wrap; /* Preserves whitespace and line breaks */
+    }
+
+    .results-actions {
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+    }
+
+    .generate-new-quiz-btn {
+        background: var(--accent-cyan);
+        box-shadow: var(--glow-cyan);
+    }
+
+    .back-home-btn {
+        background: var(--accent-purple);
+        box-shadow: var(--glow-purple);
+    }
+
+    .btn {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.8rem 1.5rem;
+        border-radius: 0.8rem;
+        color: white;
+        text-decoration: none;
+        transition: transform 0.2s ease, box-shadow 0.3s ease;
+        font-size: 1.1rem;
+    }
+
+    .btn:hover {
+        transform: translateY(-3px);
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 768px) {
+        .quiz-results-container {
+            margin: 1rem;
+            padding: 1.5rem;
+        }
+
+        .results-title {
+            font-size: 2rem;
+        }
+
+        .score-display {
+            font-size: 1.2rem;
+        }
+
+        .weak-points-summary h2 {
+            font-size: 1.5rem;
+        }
+
+        .original-paragraph-section h2 {
+            font-size: 1.5rem;
+        }
+
+        .results-actions {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %} 

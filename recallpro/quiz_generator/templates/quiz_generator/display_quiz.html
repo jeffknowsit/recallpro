@@ -1,0 +1,225 @@
+{% extends 'flashcards/base.html' %}
+
+{% block title %}Take Quiz{% endblock %}
+
+{% block content %}
+<div class="quiz-container">
+    <div class="quiz-header">
+        <h1 class="quiz-title">Your Generated Quiz</h1>
+        <p class="quiz-description">Answer the questions below and submit to see your score!</p>
+    </div>
+
+    <form method="post" class="quiz-form">
+        {% csrf_token %}
+        {% for question in quiz_data %}
+            <div class="question-card">
+                <p class="question-text">{{ forloop.counter }}. {{ question.question }}</p>
+                <div class="question-options">
+                    {% if question.type == 'mcq' %}
+                        {% for option in question.options %}
+                            <label class="option-label">
+                                <input type="radio" name="question_{{ forloop.parentloop.counter0 }}" value="{{ option }}" required>
+                                <span class="custom-radio"></span> {{ option }}
+                            </label>
+                        {% endfor %}
+                    {% elif question.type == 'tf' %}
+                        <label class="option-label">
+                            <input type="radio" name="question_{{ forloop.counter0 }}" value="True" required>
+                            <span class="custom-radio"></span> True
+                        </label>
+                        <label class="option-label">
+                            <input type="radio" name="question_{{ forloop.counter0 }}" value="False" required>
+                            <span class="custom-radio"></span> False
+                        </label>
+                    {% elif question.type == 'sa' %}
+                        <input type="text" name="question_{{ forloop.counter0 }}" class="short-answer-input" placeholder="Your answer..." required>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+        <button type="submit" class="btn submit-quiz-btn">
+            <span class="btn-icon">✅</span> Submit Quiz
+        </button>
+    </form>
+</div>
+
+<style>
+    .quiz-container {
+        max-width: 900px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background: rgba(26, 26, 46, 0.9);
+        border-radius: 1.5rem;
+        box-shadow: var(--glow-purple);
+        animation: fadeIn 0.8s ease-out;
+    }
+
+    .quiz-header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+    }
+
+    .quiz-title {
+        color: var(--accent-cyan);
+        font-size: 2.8rem;
+        margin-bottom: 1rem;
+        text-shadow: var(--glow-cyan);
+    }
+
+    .quiz-description {
+        color: var(--text-light);
+        font-size: 1.1rem;
+        line-height: 1.6;
+    }
+
+    .quiz-form {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
+
+    .question-card {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 1.5rem;
+        border-radius: 1rem;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 0 15px rgba(0, 255, 255, 0.05), 0 0 5px rgba(0, 255, 255, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .question-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0 25px rgba(0, 255, 255, 0.1), 0 0 10px rgba(0, 255, 255, 0.2);
+    }
+
+    .question-text {
+        color: var(--text-light);
+        font-size: 1.2rem;
+        margin-bottom: 1.5rem;
+        font-weight: bold;
+    }
+
+    .question-options {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .option-label {
+        display: flex;
+        align-items: center;
+        color: var(--text-light);
+        font-size: 1rem;
+        cursor: pointer;
+        transition: color 0.3s ease;
+    }
+
+    .option-label:hover {
+        color: var(--accent-cyan);
+    }
+
+    .option-label input[type="radio"] {
+        display: none;
+    }
+
+    .custom-radio {
+        width: 18px;
+        height: 18px;
+        border: 2px solid var(--border-color);
+        border-radius: 50%;
+        margin-right: 10px;
+        display: inline-block;
+        position: relative;
+        transition: border-color 0.3s ease;
+    }
+
+    .option-label input[type="radio"]:checked + .custom-radio {
+        border-color: var(--accent-cyan);
+    }
+
+    .option-label input[type="radio"]:checked + .custom-radio::after {
+        content: '';
+        width: 10px;
+        height: 10px;
+        background: var(--accent-cyan);
+        border-radius: 50%;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        animation: radioCheck 0.3s ease-out forwards;
+    }
+
+    .short-answer-input {
+        width: 100%;
+        padding: 0.8rem;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid var(--border-color);
+        border-radius: 0.5rem;
+        color: var(--text-light);
+        font-family: 'Rubik', sans-serif;
+        font-size: 1rem;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .short-answer-input:focus {
+        border-color: var(--accent-cyan);
+        box-shadow: var(--glow-cyan-light);
+        outline: none;
+    }
+
+    .submit-quiz-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.8rem;
+        width: 100%;
+        padding: 1.2rem 2rem;
+        font-size: 1.3rem;
+        background: var(--accent-purple);
+        border: none;
+        border-radius: 0.8rem;
+        color: white;
+        cursor: pointer;
+        transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+        box-shadow: var(--glow-purple);
+        margin-top: 2rem;
+    }
+
+    .submit-quiz-btn:hover {
+        background: var(--accent-cyan);
+        transform: translateY(-3px);
+        box-shadow: var(--glow-cyan);
+    }
+
+    .submit-quiz-btn .btn-icon {
+        font-size: 1.5rem;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes radioCheck {
+        from { transform: translate(-50%, -50%) scale(0); }
+        to { transform: translate(-50%, -50%) scale(1); }
+    }
+
+    @media (max-width: 768px) {
+        .quiz-container {
+            margin: 1rem;
+            padding: 1.5rem;
+        }
+
+        .quiz-title {
+            font-size: 2rem;
+        }
+
+        .submit-quiz-btn {
+            font-size: 1.1rem;
+            padding: 1rem 1.5rem;
+        }
+    }
+</style>
+{% endblock %} 

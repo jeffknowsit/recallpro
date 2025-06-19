@@ -1,0 +1,433 @@
+{% extends 'flashcards/base.html' %}
+
+{% block title %}Quiz Time!{% endblock %}
+
+{% block content %}
+<div class="quiz-container">
+    <div class="quiz-header">
+        <h1>Quiz: {{ deck.title }}</h1>
+        <p class="question-counter">Question {{ current_question_number }} of {{ total_questions }}</p>
+    </div>
+
+    <div class="quiz-card">
+        <div class="question-section">
+            <p class="question-text">{{ card.question }}</p>
+            
+            {% if card.question_type == 'mcq' and card.options|length == 4 %}
+                <form id="mcq-form" method="post" action="{% url 'quiz_card' username=user.username deck_pk=deck.pk %}">
+                    {% csrf_token %}
+                    <div class="options-grid animated-options" id="options-grid">
+                        {% for option in card.options %}
+                            <label class="option-label option-card {% if user_answer == option %}selected{% endif %}" tabindex="0">
+                                <input type="radio" name="user_answer" value="{{ option }}" {% if show_answer %}disabled{% endif %} {% if user_answer == option %}checked{% endif %} required>
+                                <span class="option-text">{{ option }}</span>
+                                <span class="checkmark"></span>
+                            </label>
+                        {% endfor %}
+                    </div>
+                    {% if not show_answer %}
+                        <button type="submit" class="btn next-btn animated-submit">Submit Answer</button>
+                    {% else %}
+                        <div class="answer-section mt-4 {% if is_correct %}correct-answer{% else %}incorrect-answer{% endif %}">
+                            {% if is_correct %}
+                                <p class="feedback-message">🎉 Correct! 🎉</p>
+                            {% else %}
+                                <p class="feedback-message">😔 Incorrect. The correct answer is:</p>
+                                <p class="correct-answer-text">{{ card.answer }}</p>
+                                <p class="user-answer-text">Your answer: {{ user_answer }}</p>
+                            {% endif %}
+                            <div class="quiz-action-btns">
+                                <button type="submit" name="retry" value="true" class="btn retry-btn">Retry</button>
+                                <button type="submit" name="skip" value="true" class="btn skip-btn">Skip</button>
+                            </div>
+                        </div>
+                    {% endif %}
+                </form>
+            {% else %}
+                <div class="alert alert-warning">This question is not a valid MCQ with 4 options.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if show_answer %}
+    <form method="post" class="quiz-navigation" action="{% url 'quiz_card' username=user.username deck_pk=deck.pk %}">
+        {% csrf_token %}
+        <button type="submit" name="next_question" value="true" class="btn next-btn">Next Question</button>
+    </form>
+    {% endif %}
+</div>
+
+<script>
+// MCQ Refresh Button Logic
+function refreshOptions() {
+    const optionsGrid = document.getElementById('options-grid');
+    if (!optionsGrid) return;
+    let labels = Array.from(optionsGrid.children);
+    for (let i = labels.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [labels[i], labels[j]] = [labels[j], labels[i]];
+    }
+    optionsGrid.innerHTML = '';
+    labels.forEach(label => optionsGrid.appendChild(label));
+    // Animate options in
+    setTimeout(() => {
+        labels.forEach((label, idx) => {
+            label.classList.remove('fade-in');
+            void label.offsetWidth;
+            setTimeout(() => label.classList.add('fade-in'), idx * 80);
+        });
+    }, 50);
+}
+// Option card selection animation
+const optionsGrid = document.getElementById('options-grid');
+if (optionsGrid) {
+    optionsGrid.addEventListener('change', function(e) {
+        if (e.target && e.target.matches('input[type="radio"]')) {
+            document.querySelectorAll('.option-card').forEach(card => card.classList.remove('selected'));
+            e.target.closest('.option-card').classList.add('selected');
+        }
+    });
+}
+// Animate submit button on click
+const submitBtns = document.querySelectorAll('.animated-submit');
+submitBtns.forEach(btn => {
+    btn.addEventListener('click', function(e) {
+        btn.classList.remove('pulse');
+        void btn.offsetWidth;
+        btn.classList.add('pulse');
+    });
+});
+// Optionally, add a little animation to the refresh button
+const refreshBtn = document.getElementById('refresh-options-btn');
+if (refreshBtn) {
+    refreshBtn.addEventListener('mousedown', function() {
+        refreshBtn.style.transform = 'rotate(-20deg) scale(0.95)';
+    });
+    refreshBtn.addEventListener('mouseup', function() {
+        refreshBtn.style.transform = '';
+    });
+}
+// Animate options on page load
+window.addEventListener('DOMContentLoaded', () => {
+    const labels = document.querySelectorAll('.option-card');
+    labels.forEach((label, idx) => {
+        setTimeout(() => label.classList.add('fade-in'), idx * 80);
+    });
+});
+</script>
+
+<style>
+    .quiz-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        background: rgba(26, 26, 46, 0.9);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 2.5rem;
+        box-shadow: 0 0 30px rgba(0,255,255,0.08);
+        color: var(--text-color);
+    }
+
+    .quiz-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .quiz-header h1 {
+        color: var(--accent-color);
+        margin-bottom: 0.5rem;
+        font-size: 2.5rem;
+    }
+
+    .question-counter {
+        font-size: 1.1rem;
+        color: var(--text-light);
+    }
+
+    .quiz-card {
+        background: #1a1a2e;
+        border: 1px solid #4a4a6e;
+        border-radius: 10px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        transition: all 0.3s ease-in-out;
+    }
+
+    .question-text {
+        font-size: 1.6rem;
+        margin-bottom: 1.5rem;
+        line-height: 1.5;
+        color: var(--text-color);
+        text-align: center;
+    }
+
+    .options-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .option-label {
+        background: #2a2a4e;
+        border: 1px solid #5a5a7e;
+        border-radius: 8px;
+        padding: 1rem 1.2rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        color: var(--text-color);
+        font-size: 1.1rem;
+    }
+
+    .option-label:hover {
+        background: #3a3a5e;
+        border-color: var(--accent-color);
+        box-shadow: 0 0 10px rgba(0,255,255,0.2);
+    }
+
+    .option-label input[type="radio"] {
+        margin-right: 0.8rem;
+        accent-color: var(--accent-color);
+        transform: scale(1.2);
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 1rem;
+        border: 1px solid #5a5a7e;
+        border-radius: 8px;
+        background: #1a1a2e;
+        color: var(--text-color);
+        font-size: 1.1rem;
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    .form-control::placeholder {
+        color: #7a7a9e;
+    }
+
+    .quiz-navigation {
+        text-align: center;
+    }
+
+    .btn.next-btn {
+        background: var(--accent-color);
+        color: var(--background-color);
+        padding: 0.9rem 2.5rem;
+        font-size: 1.2rem;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+        box-shadow: 0 0 15px rgba(0,255,255,0.4);
+    }
+
+    .btn.next-btn:hover {
+        background: var(--accent-color-dark);
+        transform: translateY(-2px);
+        box-shadow: 0 0 20px rgba(0,255,255,0.6);
+    }
+
+    .answer-section {
+        margin-top: 2rem;
+        padding: 1.5rem;
+        border-radius: 10px;
+        text-align: center;
+        animation: fadeIn 0.5s ease-out;
+    }
+
+    .correct-answer {
+        background: rgba(46, 204, 113, 0.2); /* Green */
+        border: 1px solid rgba(46, 204, 113, 0.5);
+        box-shadow: 0 0 15px rgba(46, 204, 113, 0.4);
+    }
+
+    .incorrect-answer {
+        background: rgba(231, 76, 60, 0.2); /* Red */
+        border: 1px solid rgba(231, 76, 60, 0.5);
+        box-shadow: 0 0 15px rgba(231, 76, 60, 0.4);
+    }
+
+    .feedback-message {
+        font-size: 1.8rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+        color: var(--accent-cyan);
+        text-shadow: var(--glow-cyan);
+    }
+
+    .correct-answer-text {
+        font-size: 1.4rem;
+        color: var(--text-color);
+        margin-bottom: 0.5rem;
+    }
+
+    .user-answer-text {
+        font-size: 1.1rem;
+        color: var(--text-light);
+        margin-top: 0.5rem;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .option-label.selected {
+        border: 2px solid #00fff7;
+        background: linear-gradient(90deg, #7f00ff, #00fff7);
+        color: #fff;
+    }
+
+    .btn.refresh-btn {
+        background: #23234e;
+        color: #00fff7;
+        border: 1px solid #00fff7;
+        border-radius: 8px;
+        margin: 1rem auto 0 auto;
+        display: block;
+        font-size: 1.1rem;
+        padding: 0.6rem 1.5rem;
+        cursor: pointer;
+        transition: background 0.2s, color 0.2s, box-shadow 0.2s, transform 0.2s;
+        box-shadow: 0 0 10px rgba(0,255,255,0.15);
+    }
+
+    .btn.refresh-btn:hover {
+        background: #00fff7;
+        color: #23234e;
+        box-shadow: 0 0 20px #00fff7;
+        transform: scale(1.05);
+    }
+
+    .option-label.option-card {
+        position: relative;
+        background: linear-gradient(120deg, #2a2a4e 60%, #3a3a5e 100%);
+        border: 1.5px solid #5a5a7e;
+        border-radius: 14px;
+        padding: 1.2rem 1.5rem;
+        cursor: pointer;
+        transition: all 0.25s cubic-bezier(.4,2,.6,1), box-shadow 0.2s;
+        display: flex;
+        align-items: center;
+        color: var(--text-color);
+        font-size: 1.15rem;
+        box-shadow: 0 2px 12px 0 rgba(0,255,255,0.04);
+        margin-bottom: 0.2rem;
+        outline: none;
+        opacity: 0;
+        transform: translateY(20px) scale(0.98);
+    }
+    .option-label.option-card.fade-in {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        transition: opacity 0.5s, transform 0.5s;
+    }
+    .option-label.option-card.selected {
+        background: linear-gradient(120deg, #3a3a5e 60%, #00fff7 100%);
+        border-color: #00fff7;
+        color: #fff;
+        box-shadow: 0 0 18px 0 rgba(0,255,255,0.18);
+        transform: scale(1.04) translateY(-2px);
+    }
+    .option-label.option-card.selected .checkmark {
+        opacity: 1;
+        transform: scale(1.2);
+    }
+    .option-label.option-card:focus {
+        box-shadow: 0 0 0 2px #00fff7;
+    }
+    .option-label.option-card .option-text {
+        flex: 1;
+        z-index: 2;
+    }
+    .option-label.option-card .checkmark {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: #00fff7;
+        display: inline-block;
+        margin-left: 1rem;
+        opacity: 0;
+        transform: scale(0.7);
+        transition: all 0.25s cubic-bezier(.4,2,.6,1);
+        position: relative;
+    }
+    .option-label.option-card.selected .checkmark:after {
+        content: '';
+        position: absolute;
+        left: 6px;
+        top: 2px;
+        width: 6px;
+        height: 12px;
+        border: solid #1a1a2e;
+        border-width: 0 3px 3px 0;
+        transform: rotate(45deg);
+        opacity: 1;
+    }
+    .option-label.option-card input[type="radio"] {
+        display: none;
+    }
+    .animated-submit.pulse {
+        animation: pulse-btn 0.5s;
+    }
+    @keyframes pulse-btn {
+        0% { box-shadow: 0 0 0 0 #00fff7; }
+        70% { box-shadow: 0 0 0 10px rgba(0,255,255,0.2); }
+        100% { box-shadow: 0 0 0 0 #00fff7; }
+    }
+    .quiz-action-btns {
+        display: flex;
+        justify-content: center;
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+    .retry-btn {
+        background: linear-gradient(90deg, #ff00cc 0%, #333399 100%);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 0.7rem 2rem;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: background 0.3s, transform 0.2s;
+        box-shadow: 0 0 10px #ff00cc44;
+    }
+    .retry-btn:hover {
+        background: linear-gradient(90deg, #333399 0%, #ff00cc 100%);
+        transform: scale(1.05);
+    }
+    .skip-btn {
+        background: linear-gradient(90deg, #00fff7 0%, #333399 100%);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 0.7rem 2rem;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: background 0.3s, transform 0.2s;
+        box-shadow: 0 0 10px #00fff744;
+    }
+    .skip-btn:hover {
+        background: linear-gradient(90deg, #333399 0%, #00fff7 100%);
+        transform: scale(1.05);
+    }
+    .ai-remark {
+        text-align: center;
+        font-size: 1.3rem;
+        font-weight: 500;
+        margin-bottom: 1rem;
+        color: var(--accent-color);
+        letter-spacing: 0.5px;
+        animation: fadeInRemark 0.7s;
+    }
+    @keyframes fadeInRemark {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %} 
