@@ -1,6 +1,7 @@
 # 🚀 RecallPro: The Futuristic AI Flashcard App
 
-![RecallPro Banner](https://user-images.githubusercontent.com/your-banner.png)
+![RecallPro Banner](![image](https://github.com/user-attachments/assets/2f7c797d-fe4c-416c-b80a-8c78c6052971)
+)
 
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue?logo=python)](https://www.python.org/)
 [![Django](https://img.shields.io/badge/django-5.2-green?logo=django)](https://www.djangoproject.com/)
