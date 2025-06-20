@@ -33,8 +33,6 @@
 
 ## 🖼️ Screenshots
 
-> Add your own screenshots to the `screenshots/` folder and update the links below!
-
 | Dashboard | Quiz | Deck Detail |
 |---|---|---|
 | ![Dashboard](screenshots/dashboard.png) | ![Quiz](screenshots/quiz.png) | ![Deck Detail](screenshots/deck_detail.png) |
