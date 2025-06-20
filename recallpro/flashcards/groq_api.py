@@ -1,7 +1,8 @@
 import requests
+import os
 
-GROQ_API_KEY = "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"
-GROQ_API_URL = "https://api.groq.com/v1/"  # Replace with actual Groq endpoint if different
+GROQ_API_KEY = os.environ.get('GROQ_API_KEY')
+GROQ_API_URL = os.environ.get('GROQ_API_URL', 'https://api.groq.com/v1/')
 
 headers = {
     "Authorization": f"Bearer {GROQ_API_KEY}",

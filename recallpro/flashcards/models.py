@@ -177,6 +177,7 @@ class StudySession(models.Model):
     correct_answers = models.IntegerField(default=0)
     duration = models.IntegerField(default=0) # Duration in minutes
     score = models.IntegerField(default=0) # Score for the session
+    avg_time_per_card = models.FloatField(default=0) # Average time per card in seconds
 
     class Meta:
         ordering = ['-started_at']

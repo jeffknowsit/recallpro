@@ -289,6 +289,11 @@
     <nav class="navbar">
         <div class="nav-content">
             <a href="{% url 'home' %}" class="nav-brand">RecallPro</a>
+            {% if user.is_authenticated %}
+            <div style="margin-left:auto; margin-right:2rem; color:var(--accent-cyan); font-weight:600; font-size:1.1rem;">
+                👤 {{ user.username }}
+            </div>
+            {% endif %}
             <div class="nav-links">
                 {% if user.is_authenticated %}
                     <a href="{% url 'deck_list' username=user.username %}" class="nav-link">My Decks</a>

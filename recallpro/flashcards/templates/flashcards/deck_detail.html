@@ -48,34 +48,33 @@
         </div>
 
         <div class="stat-card progress">
-            <h3>Learning Progress</h3>
+            <h3>Answer Progress</h3>
             <div class="progress-chart">
                 <div class="progress-bar-multi">
-                    <div class="progress-segment new" style="width: {{ deck.new_cards_percentage|default:0 }}%"></div>
-                    <div class="progress-segment learning" style="width: {{ deck.learning_cards_percentage|default:0 }}%"></div>
-                    <div class="progress-segment mastered" style="width: {{ deck.mastered_cards_percentage|default:0 }}%"></div>
+                    <div class="progress-segment correct" style="width: {{ correct_pct|default:0 }}%"></div>
+                    <div class="progress-segment wrong" style="width: {{ wrong_pct|default:0 }}%"></div>
                 </div>
                 <div class="progress-labels">
                     <span>0%</span>
-                    <span>50%</span>
+                    <span>Correct: {{ correct_count }} ({{ correct_pct|floatformat:1 }}%)</span>
+                    <span>Wrong: {{ wrong_count }} ({{ wrong_pct|floatformat:1 }}%)</span>
                     <span>100%</span>
                 </div>
             </div>
             <div class="card-distribution-flex">
                 <div class="distribution-item-flex">
-                    <span class="distribution-label" style="color: #00fff7; font-weight: bold;">New</span><br>
-                    <span class="distribution-value">{{ deck.new_cards_count|default:0 }}</span><br>
-                    <span class="distribution-percent" style="color: #00fff7;">{{ deck.new_cards_percentage|floatformat:1 }}%</span>
+                    <span class="distribution-label" style="color: #00ff99; font-weight: bold;">Correct</span><br>
+                    <span class="distribution-value">{{ correct_count }}</span><br>
+                    <span class="distribution-percent" style="color: #00ff99;">{{ correct_pct|floatformat:1 }}%</span>
                 </div>
                 <div class="distribution-item-flex">
-                    <span class="distribution-label" style="color: #00cfff; font-weight: bold;">Learning</span><br>
-                    <span class="distribution-value">{{ deck.learning_cards_count|default:0 }}</span><br>
-                    <span class="distribution-percent" style="color: #00cfff;">{{ deck.learning_cards_percentage|floatformat:1 }}%</span>
+                    <span class="distribution-label" style="color: #ff4d4d; font-weight: bold;">Wrong</span><br>
+                    <span class="distribution-value">{{ wrong_count }}</span><br>
+                    <span class="distribution-percent" style="color: #ff4d4d;">{{ wrong_pct|floatformat:1 }}%</span>
                 </div>
                 <div class="distribution-item-flex">
-                    <span class="distribution-label" style="color: #a259ff; font-weight: bold;">Mastered</span><br>
-                    <span class="distribution-value">{{ deck.mastered_cards_count|default:0 }}</span><br>
-                    <span class="distribution-percent" style="color: #a259ff;">{{ deck.mastered_cards_percentage|floatformat:1 }}%</span>
+                    <span class="distribution-label" style="color: #a259ff; font-weight: bold;">Total Attempts</span><br>
+                    <span class="distribution-value">{{ total_reviews }}</span><br>
                 </div>
             </div>
         </div>
@@ -85,20 +84,31 @@
             <div class="metrics-grid">
                 <div class="metric-item">
                     <span class="metric-label">Average Score</span>
-                    <span class="metric-value">{{ deck.average_score|default:"0" }}%</span>
+                    <span class="metric-value">{{ average_score|default:"0" }}%</span>
                 </div>
                 <div class="metric-item">
-                    <span class="metric-label">Average Time/Card</span>
-                    <span class="metric-value">{{ deck.avg_time_per_card|default:"0" }}s</span>
+                    <span class="metric-label">Last Quiz Response Time</span>
+                    <span class="metric-value">
+                        {% if last_quiz_time %}{{ last_quiz_time|floatformat:1 }}s{% else %}N/A{% endif %}
+                    </span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">5-Session Avg. Response Time</span>
+                    <span class="metric-value">{{ avg_time_per_card|floatformat:1 }}s</span>
                 </div>
                 <div class="metric-item">
                     <span class="metric-label">Success Rate</span>
-                    <span class="metric-value">{{ deck.success_rate|default:"0" }}%</span>
+                    <span class="metric-value">{{ success_rate|default:"0" }}%</span>
                 </div>
                 <div class="metric-item">
                     <span class="metric-label">Retention Rate</span>
-                    <span class="metric-value">{{ deck.retention_rate|default:"0" }}%</span>
+                    <span class="metric-value">{{ retention_rate|default:"0" }}%</span>
                 </div>
+            </div>
+            <div class="export-report-btn-container">
+                <a href="{% url 'export_quiz_report' username=deck.user.username pk=deck.pk %}" class="btn export-report-btn" download>
+                    <span class="btn-icon">📊</span> Export Report
+                </a>
             </div>
         </div>
 
@@ -350,6 +360,14 @@
 
     .progress-segment.mastered {
         background: #a259ff;
+    }
+
+    .progress-segment.correct {
+        background: #00ff99;
+    }
+
+    .progress-segment.wrong {
+        background: #ff4d4d;
     }
 
     .progress-labels {
@@ -652,6 +670,32 @@
         .cards-grid {
             grid-template-columns: 1fr;
         }
+    }
+
+    .export-report-btn-container {
+        text-align: center;
+        margin-top: 1.2rem;
+    }
+    .export-report-btn {
+        background: linear-gradient(90deg, #00fff7 0%, #a259ff 100%);
+        color: #18182f;
+        font-weight: 700;
+        font-size: 1.1rem;
+        border: none;
+        border-radius: 0.7rem;
+        box-shadow: 0 0 15px 0 #00fff7;
+        padding: 0.9rem 2.2rem;
+        transition: background 0.2s, color 0.2s, transform 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.7rem;
+        text-decoration: none;
+    }
+    .export-report-btn:hover {
+        background: linear-gradient(90deg, #a259ff 0%, #00fff7 100%);
+        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 0 25px 0 #a259ff;
     }
 </style>
 {% endblock %} 

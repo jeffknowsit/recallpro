@@ -58,4 +58,38 @@ class CardForm(forms.ModelForm):
         widgets = {
             'question': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'answer': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-        } 
+        }
+
+class MCQCardForm(forms.ModelForm):
+    option1 = forms.CharField(label='Option 1', max_length=255, required=True)
+    option2 = forms.CharField(label='Option 2', max_length=255, required=True)
+    option3 = forms.CharField(label='Option 3', max_length=255, required=True)
+    option4 = forms.CharField(label='Option 4', max_length=255, required=True)
+    difficulty = forms.ChoiceField(choices=Card.DIFFICULTY_CHOICES, required=True)
+
+    class Meta:
+        model = Card
+        fields = ['question', 'answer', 'difficulty']
+        widgets = {
+            'question': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'answer': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        options = [cleaned_data.get('option1'), cleaned_data.get('option2'), cleaned_data.get('option3'), cleaned_data.get('option4')]
+        if len(set(options)) < 4:
+            raise forms.ValidationError('All options must be unique.')
+        if cleaned_data.get('answer') not in options:
+            raise forms.ValidationError('The answer must match one of the options.')
+        return cleaned_data
+
+    def save(self, commit=True, deck=None):
+        instance = super().save(commit=False)
+        instance.question_type = 'mcq'
+        instance.options = [self.cleaned_data['option1'], self.cleaned_data['option2'], self.cleaned_data['option3'], self.cleaned_data['option4']]
+        if deck:
+            instance.deck = deck
+        if commit:
+            instance.save()
+        return instance 

@@ -11,7 +11,14 @@
 
     <div class="quiz-card">
         <div class="question-section">
+            <div class="timer-bar">
+                <span id="timer-display">00:30</span>
+            </div>
             <p class="question-text">{{ card.question }}</p>
+            <div id="timeout-message" class="timeout-message" style="display:none;">
+                <span class="timeout-icon">⏰</span>
+                <span class="timeout-text">Question Timeout!</span>
+            </div>
             
             {% if card.question_type == 'mcq' and card.options|length == 4 %}
                 <form id="mcq-form" method="post" action="{% url 'quiz_card' username=user.username deck_pk=deck.pk %}">
@@ -114,6 +121,62 @@ window.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => label.classList.add('fade-in'), idx * 80);
     });
 });
+// 30-second countdown timer
+let timer = 30;
+let timerDisplay = document.getElementById('timer-display');
+let timerInterval = null;
+function updateTimerDisplay() {
+    let min = Math.floor(timer / 60).toString().padStart(2, '0');
+    let sec = (timer % 60).toString().padStart(2, '0');
+    timerDisplay.textContent = `${min}:${sec}`;
+}
+function autoSubmit() {
+    // If timer runs out, show timeout message, then auto-advance
+    let form = document.getElementById('mcq-form') || document.getElementById('short-answer-form');
+    let timeoutMsg = document.getElementById('timeout-message');
+    if (timeoutMsg) {
+        timeoutMsg.style.display = 'block';
+    }
+    setTimeout(function() {
+        // Instead of auto-skip, submit a hidden 'next_question' form to advance
+        let nextForm = document.createElement('form');
+        nextForm.method = 'post';
+        nextForm.action = window.location.href;
+        // CSRF token
+        let csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]');
+        if (csrfToken) {
+            let csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = csrfToken.value;
+            nextForm.appendChild(csrfInput);
+        }
+        let nextInput = document.createElement('input');
+        nextInput.type = 'hidden';
+        nextInput.name = 'next_question';
+        nextInput.value = 'true';
+        nextForm.appendChild(nextInput);
+        document.body.appendChild(nextForm);
+        nextForm.submit();
+    }, 1500); // Show message for 1.5s before redirect
+}
+function startTimer() {
+    timer = 30;
+    updateTimerDisplay();
+    timerInterval = setInterval(() => {
+        timer--;
+        updateTimerDisplay();
+        if (timer <= 0) {
+            clearInterval(timerInterval);
+            autoSubmit();
+        }
+    }, 1000);
+}
+// Only start timer if not showing answer
+var showAnswer = '{{ show_answer|yesno:'true,false'|lower }}';
+if (timerDisplay && showAnswer === 'false') {
+    startTimer();
+}
 </script>
 
 <style>
@@ -428,6 +491,43 @@ window.addEventListener('DOMContentLoaded', () => {
     @keyframes fadeInRemark {
         from { opacity: 0; transform: translateY(20px); }
         to { opacity: 1; transform: translateY(0); }
+    }
+    .timer-bar {
+        text-align: center;
+        margin-bottom: 1rem;
+        font-size: 1.3rem;
+        font-weight: bold;
+        color: #00fff7;
+        letter-spacing: 2px;
+    }
+    #timer-display {
+        font-family: 'Rubik', monospace;
+        font-size: 2rem;
+        color: #00fff7;
+        text-shadow: 0 0 8px #00fff7;
+    }
+    .timeout-message {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        background: rgba(255, 71, 87, 0.15);
+        border: 1.5px solid #ff4757;
+        color: #ff4757;
+        font-size: 1.3rem;
+        font-weight: bold;
+        border-radius: 0.7rem;
+        padding: 1rem 2rem;
+        margin: 1.5rem auto 0 auto;
+        box-shadow: 0 0 15px #ff4757aa;
+        animation: fadeIn 0.5s;
+    }
+    .timeout-icon {
+        font-size: 2rem;
+        margin-right: 0.5rem;
+    }
+    .timeout-text {
+        letter-spacing: 1px;
     }
 </style>
 {% endblock %} 

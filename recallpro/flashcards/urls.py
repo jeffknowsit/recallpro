@@ -32,4 +32,5 @@ urlpatterns = [
     path('<str:username>/decks/<int:pk>/start-quiz/', views.StartQuizView.as_view(), name='start_quiz'),
     path('<str:username>/decks/<int:deck_pk>/quiz-card/', views.QuizCardView.as_view(), name='quiz_card'),
     path('<str:username>/decks/<int:deck_pk>/quiz-results/', views.QuizResultsView.as_view(), name='quiz_results'),
+    path('<str:username>/decks/<int:pk>/export-report/', views.ExportQuizReportView.as_view(), name='export_quiz_report'),
 ] 

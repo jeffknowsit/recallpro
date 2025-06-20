@@ -8,7 +8,7 @@
         <h1 class="hero-title">Welcome to Your Learning Space</h1>
         <div class="hero-stats">
             <div class="stat-card">
-                <span class="stat-number">{{ decks.count }}</span>
+                <span class="stat-number">{{ total_decks }}</span>
                 <span class="stat-label">Total Decks</span>
             </div>
             <div class="stat-card">
@@ -20,6 +20,11 @@
                 <span class="stat-label">Study Sessions</span>
             </div>
         </div>
+        {% if user.is_authenticated %}
+        <div style="text-align:right; margin-top:-2.5rem; margin-bottom:1rem; font-size:1.1rem; color:var(--accent-cyan);">
+            <span>👤 {{ user.username }}</span>
+        </div>
+        {% endif %}
         {% if user.is_authenticated and user.username == view.kwargs.username %}
             <a href="{% url 'deck_create' username=user.username %}" class="btn create-deck-btn">
                 <span class="btn-icon">+</span> Create New Deck
@@ -29,457 +34,442 @@
 </div>
 
 <div class="decks-container">
-    <div class="decks-grid">
-        {% for deck in decks %}
-            <a href="{% url 'deck_detail' username=deck.user.username pk=deck.pk %}" class="deck-card-link">
-                <div class="deck-card">
-                    <div class="deck-card-front">
-                        <div class="deck-header">
-                            <h2 class="deck-title">{{ deck.title }}</h2>
-                            <div class="deck-badge">{{ deck.cards.count }} cards</div>
-                        </div>
-                        <p class="deck-description">{{ deck.description }}</p>
-                        <div class="deck-meta">
-                            <div class="meta-item">
-                                <i class="meta-icon">📚</i>
-                                <span>Study Count: {{ deck.study_count }}</span>
-                            </div>
-                            <div class="meta-item">
-                                <i class="meta-icon">⏰</i>
-                                {% if deck.last_studied %}
-                                    <span>Last Studied: {{ deck.last_studied|timesince }} ago</span>
-                                {% else %}
-                                    <span>Not studied yet</span>
-                                {% endif %}
-                            </div>
-                        </div>
-                        
-                        <div class="deck-stats-summary">
-                            <h3>Performance Summary</h3>
-                            <div class="summary-grid">
-                                <div class="summary-item">
-                                    <span class="summary-label">Avg. Score</span>
-                                    <span class="summary-value">{{ deck.average_score|default:"0" }}%</span>
-                                </div>
-                                <div class="summary-item">
-                                    <span class="summary-label">Mastery</span>
-                                    <span class="summary-value">{{ deck.mastery_level|default:"Beginner" }}</span>
-                                </div>
-                                <div class="summary-item">
-                                    <span class="summary-label">New Cards</span>
-                                    <span class="summary-value">{{ deck.new_cards_count|default:0 }}</span>
-                                </div>
-                                <div class="summary-item">
-                                    <span class="summary-label">Learning</span>
-                                    <span class="summary-value">{{ deck.learning_cards_count|default:0 }}</span>
-                                </div>
-                                <div class="summary-item">
-                                    <span class="summary-label">Mastered</span>
-                                    <span class="summary-value">{{ deck.mastered_cards_count|default:0 }}</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="card-actions deck-list-actions">
-                            <a href="{% url 'start_quiz' username=deck.user.username pk=deck.pk %}" class="action-btn study-btn">
-                                <i class="action-icon">📖</i> Start Quiz
-                            </a>
-                            {% if user == deck.user %}
-                                <a href="{% url 'deck_update' username=deck.user.username pk=deck.pk %}" class="action-btn edit-btn">
-                                    <i class="action-icon">✏️</i> Edit
-                                </a>
-                                <a href="{% url 'deck_delete' username=deck.user.username pk=deck.pk %}" class="action-btn delete-btn">
-                                    <i class="action-icon">🗑️</i> Delete
-                                </a>
-                            {% endif %}
-                        </div>
-                    </div>
+  <div class="decks-custom-layout">
+    {% for row in deck_rows %}
+      <div class="decks-row">
+        {% for deck in row %}
+          <a href="{% url 'deck_detail' username=deck.user.username pk=deck.pk %}" class="deck-card-link">
+            <div class="deck-card">
+              <div class="deck-card-front">
+                <div class="deck-header">
+                  <h2 class="deck-title">{{ deck.title }}</h2>
+                  <div class="deck-badge">{{ deck.cards.count }} cards</div>
                 </div>
-            </a>
-        {% empty %}
-            <div class="no-decks">
-                <div class="empty-state">
-                    <div class="empty-icon">📚</div>
-                    <h2>No Decks Yet</h2>
-                    <p>Create your first deck to start learning!</p>
-                    {% if user.is_authenticated and user.username == view.kwargs.username %}
-                        <a href="{% url 'deck_create' username=user.username %}" class="btn create-first-deck-btn">
-                            <span class="btn-icon">+</span> Create Your First Deck
-                        </a>
+                <p class="deck-description">{{ deck.description }}</p>
+                <div class="deck-meta">
+                  <div class="meta-item">
+                    <i class="meta-icon">📚</i>
+                    <span>Study Count: {{ deck.study_count }}</span>
+                  </div>
+                  <div class="meta-item">
+                    <i class="meta-icon">⏰</i>
+                    {% if deck.last_studied %}
+                      <span>Last Studied: {{ deck.last_studied|timesince }} ago</span>
+                    {% else %}
+                      <span>Not studied yet</span>
                     {% endif %}
+                  </div>
                 </div>
+                <div class="deck-stats-summary">
+                  <h3>Performance Summary</h3>
+                  <div class="summary-grid">
+                    <div class="summary-item">
+                      <span class="summary-label">Avg. Score</span>
+                      <span class="summary-value">{{ deck.average_score|default:"0" }}%</span>
+                    </div>
+                    <div class="summary-item">
+                      <span class="summary-label">Mastery</span>
+                      <span class="summary-value">{{ deck.mastery_level|default:"Beginner" }}</span>
+                    </div>
+                    <div class="summary-item">
+                      <span class="summary-label">New Cards</span>
+                      <span class="summary-value">{{ deck.new_cards_count|default:0 }}</span>
+                    </div>
+                    <div class="summary-item">
+                      <span class="summary-label">Learning</span>
+                      <span class="summary-value">{{ deck.learning_cards_count|default:0 }}</span>
+                    </div>
+                    <div class="summary-item">
+                      <span class="summary-label">Mastered</span>
+                      <span class="summary-value">{{ deck.mastered_cards_count|default:0 }}</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="card-actions deck-list-actions">
+                  <a href="{% url 'start_quiz' username=deck.user.username pk=deck.pk %}" class="action-btn study-btn">
+                    <i class="action-icon">📖</i> Start Quiz
+                  </a>
+                  {% if user == deck.user %}
+                    <a href="{% url 'deck_update' username=deck.user.username pk=deck.pk %}" class="action-btn edit-btn">
+                      <i class="action-icon">✏️</i> Edit
+                    </a>
+                    <a href="{% url 'deck_delete' username=deck.user.username pk=deck.pk %}" class="action-btn delete-btn">
+                      <i class="action-icon">🗑️</i> Delete
+                    </a>
+                  {% endif %}
+                </div>
+              </div>
             </div>
+          </a>
         {% endfor %}
-    </div>
-
-    {% if is_paginated %}
-        <div class="pagination">
-            {% if page_obj.has_previous %}
-                <a href="?page=1" class="btn">&laquo; First</a>
-                <a href="?page={{ page_obj.previous_page_number }}" class="btn">Previous</a>
-            {% endif %}
-
-            <span class="current-page">
-                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-            </span>
-
-            {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}" class="btn">Next</a>
-                <a href="?page={{ page_obj.paginator.num_pages }}" class="btn">Last &raquo;</a>
-            {% endif %}
+      </div>
+    {% endfor %}
+    {% if decks|length == 0 %}
+      <div class="no-decks">
+        <div class="empty-state">
+          <div class="empty-icon">📚</div>
+          <h2>No Decks Yet</h2>
+          <p>Create your first deck to start learning!</p>
+          {% if user.is_authenticated and user.username == view.kwargs.username %}
+            <a href="{% url 'deck_create' username=user.username %}" class="btn create-first-deck-btn">
+              <span class="btn-icon">+</span> Create Your First Deck
+            </a>
+          {% endif %}
         </div>
+      </div>
     {% endif %}
+  </div>
 </div>
 
 <style>
-    .hero-section {
-        background: linear-gradient(135deg, var(--primary-gradient));
-        padding: 4rem 2rem;
-        margin-bottom: 3rem;
-        border-radius: 0 0 2rem 2rem;
-        box-shadow: var(--glow-purple);
-    }
+.decks-custom-layout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2.5rem;
+}
 
-    .hero-content {
-        max-width: 1200px;
-        margin: 0 auto;
-        text-align: center;
-    }
+.decks-row {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+}
 
+.hero-section {
+    background: linear-gradient(135deg, var(--primary-gradient));
+    padding: 4rem 2rem;
+    margin-bottom: 3rem;
+    border-radius: 0 0 2rem 2rem;
+    box-shadow: var(--glow-purple);
+}
+
+.hero-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.hero-title {
+    color: var(--accent-cyan);
+    font-size: 3rem;
+    margin-bottom: 2rem;
+    text-shadow: var(--glow-cyan);
+    animation: fadeInUp 1s ease-out;
+}
+
+.hero-stats {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    animation: fadeInUp 1s ease-out 0.2s backwards;
+}
+
+.stat-card {
+    background: rgba(26, 26, 46, 0.9);
+    padding: 1.5rem;
+    border-radius: 1rem;
+    min-width: 150px;
+    box-shadow: var(--glow-purple);
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-number {
+    display: block;
+    color: var(--accent-cyan);
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    text-shadow: var(--glow-cyan);
+}
+
+.stat-label {
+    color: var(--text-light);
+    font-size: 1rem;
+}
+
+.create-deck-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.2rem;
+    padding: 1rem 2rem;
+    animation: fadeInUp 1s ease-out 0.4s backwards;
+}
+
+.decks-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.deck-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block; /* Make the anchor fill the card area */
+}
+
+.deck-card {
+    background: rgba(26, 26, 46, 0.9);
+    border: 1px solid var(--border-color);
+    border-radius: 1rem;
+    box-shadow: var(--glow-purple);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    overflow: hidden; /* Ensure content stays within bounds */
+    height: 100%; /* Make cards fill their grid cell */
+}
+
+.deck-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0 25px rgba(0,255,255,0.2);
+}
+
+.deck-card-front {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    justify-content: space-between;
+}
+
+.deck-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.deck-title {
+    color: var(--accent-cyan);
+    font-size: 1.8rem;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.deck-badge {
+    background: var(--primary-purple);
+    color: white;
+    padding: 0.3rem 0.8rem;
+    border-radius: 1rem;
+    font-size: 0.85rem;
+    font-weight: bold;
+}
+
+.deck-description {
+    color: var(--text-light);
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+    flex-grow: 1; /* Allows description to take available space */
+}
+
+.deck-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.deck-meta .meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-light);
+    font-size: 0.95rem;
+}
+
+.deck-meta .meta-icon {
+    font-size: 1.2rem;
+    color: var(--accent-color);
+}
+
+.deck-stats-summary {
+    background: rgba(40, 40, 70, 0.7); /* Slightly darker background */
+    border-radius: 0.75rem;
+    padding: 1.2rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid rgba(80, 80, 120, 0.5);
+}
+
+.deck-stats-summary h3 {
+    color: var(--accent-color);
+    font-size: 1.2rem;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 1rem;
+    text-align: center;
+}
+
+.summary-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.summary-label {
+    font-size: 0.85rem;
+    color: var(--text-light);
+}
+
+.summary-value {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: var(--accent-cyan);
+}
+
+.deck-actions.deck-list-actions {
+    display: flex;
+    justify-content: space-around;
+    gap: 0.5rem;
+    margin-top: auto; /* Push actions to the bottom */
+    padding-top: 1rem; /* Add some space above */
+    border-top: 1px solid rgba(80, 80, 120, 0.3);
+}
+
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.6rem 1rem;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    color: white;
+    flex-grow: 1;
+    justify-content: center;
+}
+
+.action-btn .action-icon {
+    font-size: 1rem;
+}
+
+.action-btn.study-btn {
+    background: #007bff;
+    background: var(--accent-color);
+    box-shadow: 0 0 10px rgba(0,255,255,0.3);
+}
+.action-btn.study-btn:hover {
+    background: var(--accent-color-dark);
+    transform: translateY(-2px);
+}
+
+.action-btn.edit-btn {
+    background: #6c757d;
+    background: var(--primary-purple-dark);
+}
+.action-btn.edit-btn:hover {
+    background: #5a5a7e;
+    transform: translateY(-2px);
+}
+
+.action-btn.delete-btn {
+    background: #dc3545;
+    background: var(--error-color);
+}
+.action-btn.delete-btn:hover {
+    background: #c82333;
+    transform: translateY(-2px);
+}
+
+.no-decks {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: rgba(26, 26, 46, 0.8);
+    border-radius: 1rem;
+    box-shadow: var(--glow-purple);
+    color: var(--text-color);
+    grid-column: 1 / -1; /* Span across all columns */
+}
+
+.empty-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    color: var(--accent-color);
+}
+
+.no-decks h2 {
+    color: var(--accent-cyan);
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.no-decks p {
+    color: var(--text-light);
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+}
+
+.create-first-deck-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.1rem;
+    padding: 0.8rem 1.8rem;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 3rem;
+    padding-bottom: 2rem;
+}
+
+.pagination .btn {
+    background: var(--primary-purple-dark);
+    color: white;
+    padding: 0.6rem 1.2rem;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    font-size: 0.95rem;
+}
+
+.pagination .btn:hover {
+    background: var(--primary-purple);
+    transform: translateY(-2px);
+}
+
+.pagination .current-page {
+    color: var(--accent-cyan);
+    font-size: 1.1rem;
+    font-weight: bold;
+}
+
+@media (max-width: 768px) {
     .hero-title {
-        color: var(--accent-cyan);
-        font-size: 3rem;
-        margin-bottom: 2rem;
-        text-shadow: var(--glow-cyan);
-        animation: fadeInUp 1s ease-out;
+        font-size: 2.2rem;
     }
 
     .hero-stats {
-        display: flex;
-        justify-content: center;
-        gap: 2rem;
-        margin-bottom: 2rem;
-        animation: fadeInUp 1s ease-out 0.2s backwards;
+        flex-direction: column;
+        gap: 1rem;
     }
 
     .stat-card {
-        background: rgba(26, 26, 46, 0.9);
-        padding: 1.5rem;
-        border-radius: 1rem;
-        min-width: 150px;
-        box-shadow: var(--glow-purple);
-        transition: transform 0.3s ease;
+        min-width: unset;
+        width: 100%;
     }
 
-    .stat-card:hover {
-        transform: translateY(-5px);
-    }
-
-    .stat-number {
-        display: block;
-        color: var(--accent-cyan);
-        font-size: 2.5rem;
-        font-weight: bold;
-        margin-bottom: 0.5rem;
-        text-shadow: var(--glow-cyan);
-    }
-
-    .stat-label {
-        color: var(--text-light);
-        font-size: 1rem;
-    }
-
-    .create-deck-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 1.2rem;
-        padding: 1rem 2rem;
-        animation: fadeInUp 1s ease-out 0.4s backwards;
-    }
-
-    .decks-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 2rem;
-    }
-
-    .decks-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 2rem;
-        padding-bottom: 3rem;
-    }
-
-    .deck-card-link {
-        text-decoration: none;
-        color: inherit;
-        display: block; /* Make the anchor fill the card area */
-    }
-
-    .deck-card {
-        background: rgba(26, 26, 46, 0.9);
-        border: 1px solid var(--border-color);
-        border-radius: 1rem;
-        box-shadow: var(--glow-purple);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        position: relative;
-        overflow: hidden; /* Ensure content stays within bounds */
-        height: 100%; /* Make cards fill their grid cell */
-    }
-
-    .deck-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 0 25px rgba(0,255,255,0.2);
-    }
-
-    .deck-card-front {
-        padding: 1.5rem;
-        display: flex;
+    .decks-row {
         flex-direction: column;
-        height: 100%;
-        justify-content: space-between;
-    }
-
-    .deck-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 1rem;
-    }
-
-    .deck-title {
-        color: var(--accent-cyan);
-        font-size: 1.8rem;
-        margin: 0;
-        line-height: 1.2;
-    }
-
-    .deck-badge {
-        background: var(--primary-purple);
-        color: white;
-        padding: 0.3rem 0.8rem;
-        border-radius: 1rem;
-        font-size: 0.85rem;
-        font-weight: bold;
-    }
-
-    .deck-description {
-        color: var(--text-light);
-        font-size: 1rem;
-        margin-bottom: 1.5rem;
-        flex-grow: 1; /* Allows description to take available space */
-    }
-
-    .deck-meta {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1rem;
-        margin-bottom: 1.5rem;
-    }
-
-    .deck-meta .meta-item {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        color: var(--text-light);
-        font-size: 0.95rem;
-    }
-
-    .deck-meta .meta-icon {
-        font-size: 1.2rem;
-        color: var(--accent-color);
-    }
-
-    .deck-stats-summary {
-        background: rgba(40, 40, 70, 0.7); /* Slightly darker background */
-        border-radius: 0.75rem;
-        padding: 1.2rem;
-        margin-bottom: 1.5rem;
-        border: 1px solid rgba(80, 80, 120, 0.5);
-    }
-
-    .deck-stats-summary h3 {
-        color: var(--accent-color);
-        font-size: 1.2rem;
-        margin-top: 0;
-        margin-bottom: 1rem;
-        text-align: center;
-    }
-
-    .summary-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-        gap: 1rem;
-        text-align: center;
-    }
-
-    .summary-item {
-        display: flex;
-        flex-direction: column;
-        gap: 0.2rem;
-    }
-
-    .summary-label {
-        font-size: 0.85rem;
-        color: var(--text-light);
-    }
-
-    .summary-value {
-        font-size: 1.1rem;
-        font-weight: bold;
-        color: var(--accent-cyan);
-    }
-
-    .deck-actions.deck-list-actions {
-        display: flex;
-        justify-content: space-around;
-        gap: 0.5rem;
-        margin-top: auto; /* Push actions to the bottom */
-        padding-top: 1rem; /* Add some space above */
-        border-top: 1px solid rgba(80, 80, 120, 0.3);
     }
 
     .action-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3rem;
-        padding: 0.6rem 1rem;
-        border-radius: 0.5rem;
-        text-decoration: none;
-        font-size: 0.9rem;
-        transition: background-color 0.3s ease, transform 0.2s ease;
-        color: white;
-        flex-grow: 1;
-        justify-content: center;
+        width: 100%;
     }
-
-    .action-btn .action-icon {
-        font-size: 1rem;
-    }
-
-    .action-btn.study-btn {
-        background: #007bff;
-        background: var(--accent-color);
-        box-shadow: 0 0 10px rgba(0,255,255,0.3);
-    }
-    .action-btn.study-btn:hover {
-        background: var(--accent-color-dark);
-        transform: translateY(-2px);
-    }
-
-    .action-btn.edit-btn {
-        background: #6c757d;
-        background: var(--primary-purple-dark);
-    }
-    .action-btn.edit-btn:hover {
-        background: #5a5a7e;
-        transform: translateY(-2px);
-    }
-
-    .action-btn.delete-btn {
-        background: #dc3545;
-        background: var(--error-color);
-    }
-    .action-btn.delete-btn:hover {
-        background: #c82333;
-        transform: translateY(-2px);
-    }
-
-
-    .no-decks {
-        text-align: center;
-        padding: 4rem 2rem;
-        background: rgba(26, 26, 46, 0.8);
-        border-radius: 1rem;
-        box-shadow: var(--glow-purple);
-        color: var(--text-color);
-        grid-column: 1 / -1; /* Span across all columns */
-    }
-
-    .empty-icon {
-        font-size: 4rem;
-        margin-bottom: 1rem;
-        color: var(--accent-color);
-    }
-
-    .no-decks h2 {
-        color: var(--accent-cyan);
-        font-size: 2rem;
-        margin-bottom: 1rem;
-    }
-
-    .no-decks p {
-        color: var(--text-light);
-        font-size: 1.1rem;
-        margin-bottom: 2rem;
-    }
-
-    .create-first-deck-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 1.1rem;
-        padding: 0.8rem 1.8rem;
-    }
-
-    .pagination {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 1rem;
-        margin-top: 3rem;
-        padding-bottom: 2rem;
-    }
-
-    .pagination .btn {
-        background: var(--primary-purple-dark);
-        color: white;
-        padding: 0.6rem 1.2rem;
-        border-radius: 0.5rem;
-        text-decoration: none;
-        transition: background-color 0.3s ease, transform 0.2s ease;
-        font-size: 0.95rem;
-    }
-
-    .pagination .btn:hover {
-        background: var(--primary-purple);
-        transform: translateY(-2px);
-    }
-
-    .pagination .current-page {
-        color: var(--accent-cyan);
-        font-size: 1.1rem;
-        font-weight: bold;
-    }
-
-    @media (max-width: 768px) {
-        .hero-title {
-            font-size: 2.2rem;
-        }
-
-        .hero-stats {
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .stat-card {
-            min-width: unset;
-            width: 100%;
-        }
-
-        .decks-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .deck-actions.deck-list-actions {
-            flex-direction: column;
-        }
-
-        .action-btn {
-            width: 100%;
-        }
-    }
-
+}
 </style>
 {% endblock %} 
